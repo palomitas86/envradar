@@ -9,12 +9,7 @@ envradar scans source code, `.env` files, Docker Compose files, and GitHub Actio
 - Which variables exist locally but are not documented for new contributors?
 - Which secrets only show up in CI pipelines and deserve a second look?
 
-It is designed to be fast, safe, and CI-friendly:
-
-- Read-only by default.
-- Never prints local `.env` values.
-- Works well in pre-release checks for open-source repos.
-- Can generate a fresh `.env.example` and a markdown environment reference.
+It works both as a CLI and as a reusable GitHub Action.
 
 ## Why this is useful
 
@@ -28,9 +23,80 @@ Environment variable drift is one of the most common sources of bad onboarding, 
 - Detects `${{ secrets.NAME }}` and `${{ vars.NAME }}` references in GitHub Actions workflows.
 - Outputs plain text, markdown, or JSON.
 - Supports a small `envradar.yml` config for ignored variables and placeholder values.
-- Exits non-zero in `--strict` mode so you can use it in CI.
+- Emits GitHub annotations and a job summary when used as a GitHub Action.
+- Exits non-zero in strict mode so you can block merges when drift is found.
 
-## Install from source
+## Use as a GitHub Action
+
+After you tag a release such as `v1`, other repositories can use envradar directly:
+
+```yaml
+name: envradar
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - id: envradar
+        uses: CodMughees/envradar@v1
+        with:
+          fail-on-findings: "true"
+          report-format: markdown
+          report-file: docs/envradar-report.md
+      - name: Print summary counts
+        run: |
+          echo "strict findings: ${{ steps.envradar.outputs.strict-findings }}"
+          echo "missing vars:    ${{ steps.envradar.outputs.missing-count }}"
+```
+
+What the action gives you:
+
+- workflow annotations pinned to specific files and lines
+- a job summary with counts and a markdown report
+- optional generated files such as `.env.example` and contributor docs
+- outputs you can reuse in later workflow steps
+
+### Action inputs
+
+| Input | Default | Description |
+| --- | --- | --- |
+| `path` | `.` | Path inside the checked-out repository to scan |
+| `config` | empty | Optional path to `envradar.yml` or `.envradar.yml` |
+| `report-format` | `text` | Log and file output format: `text`, `markdown`, or `json` |
+| `report-file` | empty | Optional path where a report file should be written |
+| `write-example` | empty | Optional path where a generated `.env.example` should be written |
+| `write-docs` | empty | Optional path where markdown docs should be written |
+| `fail-on-findings` | `false` | Fail the workflow when strict findings exist |
+| `summary` | `true` | Write a markdown report to the GitHub job summary |
+| `annotations` | `true` | Emit GitHub annotations |
+| `python-version` | `3.11` | Python version used by the action |
+
+### Action outputs
+
+| Output | Description |
+| --- | --- |
+| `scanned-files` | Number of files scanned |
+| `required-runtime-count` | Runtime variables detected in code and compose files |
+| `documented-count` | Variables detected in example/template files |
+| `strict-findings` | Total count of missing, stale, and local-only findings |
+| `missing-count` | Variables used but missing from documented examples |
+| `unused-count` | Documented variables that are no longer used |
+| `local-only-count` | Local variables that are not documented |
+| `workflow-only-count` | Variables that only appear in workflow files |
+| `has-findings` | `true` when strict findings exist |
+| `report-path` | Absolute path to a generated report file |
+| `example-path` | Absolute path to a generated `.env.example` |
+| `docs-path` | Absolute path to generated markdown docs |
+| `config-path` | Absolute path to the config file that was loaded |
+
+## Install the CLI from source
 
 ```bash
 python -m pip install -e .
@@ -121,10 +187,12 @@ envradar . --format json
 
 This is useful for automation, bots, or dashboards.
 
-## GitHub Actions example
+## CLI in GitHub Actions
+
+If you want full control instead of using the packaged action, you can still install and run the CLI in a workflow:
 
 ```yaml
-name: envradar
+name: envradar-cli
 on:
   pull_request:
   push:
@@ -134,7 +202,7 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -161,6 +229,17 @@ python -m pip install -e .[dev]
 ruff check .
 pytest
 ```
+
+## Release the GitHub Action
+
+After the action is working in this repository, tag a major release so other repos can depend on a stable ref:
+
+```bash
+git tag -a v1 -m "envradar action v1"
+git push origin v1
+```
+
+You can move the `v1` tag forward for compatible updates, and publish the action to GitHub Marketplace later.
 
 ## License
 

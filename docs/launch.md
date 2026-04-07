@@ -1,24 +1,45 @@
 # Launch notes
 
-## Positioning
+## Core pitch
 
-Pitch envradar as a tiny developer tool that fixes the most boring source of broken setup instructions: env drift.
+envradar is now both a CLI and a GitHub Action for catching environment-variable drift before it breaks onboarding, CI, or preview deployments.
 
-## Demo angle
+## Best headline
 
-Use a repo that intentionally has:
+**Show HN: envradar — a GitHub Action that catches undocumented env vars**
 
-- one missing variable in `.env.example`
-- one stale variable that no longer exists in code
-- one CI secret
-- one Docker Compose placeholder
+## Alternate headlines
 
-Then show `envradar . --format markdown` in a short terminal demo.
+- **Show HN: envradar — stop shipping broken `.env.example` files**
+- **envradar — find missing, stale, and workflow-only env vars before merge**
+- **I built a GitHub Action that finds env var drift in repos**
 
-## Good first launch channels
+## Good first comment
 
-- GitHub README + animated terminal GIF
-- Hacker News: "Show HN: envradar – catch undocumented env vars before publishing your repo"
-- Reddit communities for Python, JavaScript, DevOps, and self-hosting
-- Dev.to or Hashnode post about fixing `.env.example` drift
-- X / LinkedIn post with before-and-after terminal output
+Built this after repeatedly breaking `.env.example` files across projects.
+
+envradar scans code, compose files, local `.env` files, and GitHub Actions workflows to answer a few annoying questions fast:
+- what is used in code but undocumented
+- what is documented but stale
+- what only exists locally or in CI
+
+It can run as a CLI, or as a GitHub Action that leaves annotations and a job summary on pull requests.
+
+Would love feedback on edge cases and monorepo setups.
+
+## Demo workflow snippet
+
+```yaml
+- uses: actions/checkout@v5
+- uses: CodMughees/envradar@v1
+  with:
+    fail-on-findings: "true"
+```
+
+## Where to post
+
+- Hacker News
+- r/programming
+- r/devops
+- X / Twitter
+- GitHub discussions in tooling repos where config drift is painful

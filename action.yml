@@ -1,0 +1,132 @@
+name: envradar
+description: Detect undocumented, unused, and drifting environment variables in a repository.
+author: CodMughees
+inputs:
+  path:
+    description: Path inside the checked-out repository to scan.
+    required: false
+    default: "."
+  config:
+    description: Optional path to envradar.yml or .envradar.yml.
+    required: false
+    default: ""
+  report-format:
+    description: Output format for logs and optional report files. One of text, markdown, or json.
+    required: false
+    default: text
+  report-file:
+    description: Optional path, relative to the scanned directory, where a report should be written.
+    required: false
+    default: ""
+  write-example:
+    description: Optional path, relative to the scanned directory, where a generated .env.example should be written.
+    required: false
+    default: ""
+  write-docs:
+    description: Optional path, relative to the scanned directory, where markdown docs should be written.
+    required: false
+    default: ""
+  fail-on-findings:
+    description: Fail the action when missing, stale, or undocumented local variables are found.
+    required: false
+    default: "false"
+  summary:
+    description: Append a markdown report to the GitHub job summary.
+    required: false
+    default: "true"
+  annotations:
+    description: Emit GitHub annotations for findings.
+    required: false
+    default: "true"
+  python-version:
+    description: Python version used to run envradar.
+    required: false
+    default: "3.11"
+outputs:
+  scanned-files:
+    description: Number of files scanned.
+    value: ${{ steps.run.outputs.scanned-files }}
+  required-runtime-count:
+    description: Number of runtime variables detected in code and compose files.
+    value: ${{ steps.run.outputs.required-runtime-count }}
+  documented-count:
+    description: Number of documented variables detected in example files.
+    value: ${{ steps.run.outputs.documented-count }}
+  strict-findings:
+    description: Number of strict findings.
+    value: ${{ steps.run.outputs.strict-findings }}
+  missing-count:
+    description: Number of variables missing from documented examples.
+    value: ${{ steps.run.outputs.missing-count }}
+  unused-count:
+    description: Number of documented variables that are no longer used.
+    value: ${{ steps.run.outputs.unused-count }}
+  local-only-count:
+    description: Number of local-only variables not present in documented examples.
+    value: ${{ steps.run.outputs.local-only-count }}
+  workflow-only-count:
+    description: Number of variables that only appear in workflow files.
+    value: ${{ steps.run.outputs.workflow-only-count }}
+  has-findings:
+    description: Whether strict findings were detected.
+    value: ${{ steps.run.outputs.has-findings }}
+  report-path:
+    description: Absolute path to a generated report file, when report-file is used.
+    value: ${{ steps.run.outputs.report-path }}
+  example-path:
+    description: Absolute path to a generated .env.example file, when write-example is used.
+    value: ${{ steps.run.outputs.example-path }}
+  docs-path:
+    description: Absolute path to a generated docs file, when write-docs is used.
+    value: ${{ steps.run.outputs.docs-path }}
+  config-path:
+    description: Absolute path to the config file that was loaded, when present.
+    value: ${{ steps.run.outputs.config-path }}
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install envradar
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install "$GITHUB_ACTION_PATH"
+
+    - name: Run envradar
+      id: run
+      shell: bash
+      run: |
+        args=()
+        args+=(--workspace "$GITHUB_WORKSPACE")
+        args+=(--path "${{ inputs.path }}")
+        args+=(--report-format "${{ inputs.report-format }}")
+        args+=(--output-file "$GITHUB_OUTPUT")
+        args+=(--summary-file "${GITHUB_STEP_SUMMARY:-}")
+
+        if [ -n "${{ inputs.config }}" ]; then
+          args+=(--config "${{ inputs.config }}")
+        fi
+        if [ -n "${{ inputs.report-file }}" ]; then
+          args+=(--report-file "${{ inputs.report-file }}")
+        fi
+        if [ -n "${{ inputs.write-example }}" ]; then
+          args+=(--write-example "${{ inputs.write-example }}")
+        fi
+        if [ -n "${{ inputs.write-docs }}" ]; then
+          args+=(--write-docs "${{ inputs.write-docs }}")
+        fi
+        if [ "${{ inputs.fail-on-findings }}" = "true" ]; then
+          args+=(--fail-on-findings)
+        fi
+        if [ "${{ inputs.summary }}" != "true" ]; then
+          args+=(--no-summary)
+        fi
+        if [ "${{ inputs.annotations }}" != "true" ]; then
+          args+=(--no-annotations)
+        fi
+
+        python "$GITHUB_ACTION_PATH/scripts/run_action.py" "${args[@]}"
